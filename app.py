@@ -1,3 +1,4 @@
+import re
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -29,6 +30,26 @@ def add_student():
     age = request.form['age']
     grade = request.form['grade']
     
+    students = db.session.execute(text('SELECT * FROM student')).fetchall()
+
+    if name.strip() == "":
+        return render_template('index.html', students=students, error="Nama tidak boleh kosong")
+    if len(name) > 100:
+            return render_template('index.html', students=students, error="Nama terlalu panjang")
+    if not re.match("^[A-Za-z ]+$", name):
+        return render_template('index.html', students=students, error="Nama hanya boleh huruf dan spasi")
+
+    if not age.isdigit():
+        return render_template('index.html', students=students, error="Umur harus berupa angka")
+    if int(age) <= 0 or int(age) >= 120:
+        return render_template('index.html', students=students, error="Umur tidak valid")
+
+    if grade.strip() == "":
+        return render_template('index.html', students=students, error="Grade tidak boleh kosong")
+    if len(grade) > 2:
+            return render_template('index.html', students=students, error="Grade terlalu panjang")
+    if not re.match("^[A-Za-z ]+$", grade):
+        return render_template('index.html', students=students, error="Grade tidak valid")
 
     connection = sqlite3.connect('instance/students.db')
     cursor = connection.cursor()
@@ -48,6 +69,9 @@ def add_student():
 
 @app.route('/delete/<string:id>') 
 def delete_student(id):
+    if not id.isdigit():
+        return redirect(url_for('index'))
+
     # RAW Query
     db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
     db.session.commit()
@@ -60,6 +84,29 @@ def edit_student(id):
         name = request.form['name']
         age = request.form['age']
         grade = request.form['grade']
+        
+        student = db.session.execute(
+            text(f"SELECT * FROM student WHERE id={id}")
+        ).fetchone()
+
+        if name.strip() == "":
+            return render_template('edit.html', student=student, error="Nama tidak boleh kosong")
+        if len(name) > 100:
+            return render_template('edit.html', student=student, error="Nama terlalu panjang")
+        if not re.match("^[A-Za-z ]+$", name):
+            return render_template('edit.html', student=student, error="Nama hanya boleh huruf dan spasi")
+
+        if not age.isdigit():
+            return render_template('edit.html', student=student, error="Umur harus berupa angka")
+        if int(age) <= 0 or int(age) >= 120:
+            return render_template('edit.html', student=student, error="Umur tidak valid")
+
+        if grade.strip() == "":
+            return render_template('edit.html', student=student, error="Grade tidak boleh kosong")
+        if len(grade) > 2:
+            return render_template('edit.html', student=student, error="Grade terlalu panjang")
+        if not re.match("^[A-Za-z ]+$", grade):
+            return render_template('edit.html', student=student, error="Grade tidak valid")
         
         # RAW Query
         db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
