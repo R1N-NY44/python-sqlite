@@ -26,7 +26,10 @@
             <tbody>
                 {% for student in students %}
                 <tr>
-                    <td>{{ student.name|safe }}</td>
+                    <!-- Sebelum perbaikan (rentan terhadap XSS) -->
+                    <!-- <td>{{ student.name|safe }}</td> -->
+                    <!-- Setelah perbaikan (aman terhadap XSS) -->
+                    <td>{{ student.name }}</td>
                     <td>{{ student.age }}</td>
                     <td>{{ student.grade }}</td>
                     <td>
