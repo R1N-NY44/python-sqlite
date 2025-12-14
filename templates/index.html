@@ -39,4 +39,7 @@
         </table>
     </div>
 </body>
+{% if error %}
+  <script>alert("{{ error }}");</script>
+{% endif %}
 </html>
