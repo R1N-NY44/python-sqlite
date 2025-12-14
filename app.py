@@ -34,22 +34,28 @@ def add_student():
     cursor = connection.cursor()
 
     # RAW Query
-    # db.session.execute(
-    #     text("INSERT INTO student (name, age, grade) VALUES (:name, :age, :grade)"),
-    #     {'name': name, 'age': age, 'grade': grade}
-    # )
-    # db.session.commit()
-    query = f"INSERT INTO student (name, age, grade) VALUES ('{name}', {age}, '{grade}')"
-    cursor.execute(query)
-    connection.commit()
-    connection.close()
+    # This one actually works cuz of parameter binding, but it came from the GitHub repo itself, so thanks I'd guess? :D
+    db.session.execute(
+        text("INSERT INTO student (name, age, grade) VALUES (:name, :age, :grade)"),
+        {'name': name, 'age': age, 'grade': grade}
+    )
+    db.session.commit()
+    # query = f"INSERT INTO student (name, age, grade) VALUES ('{name}', {age}, '{grade}')"
+    # cursor.execute(query)
+    # connection.commit()
+    # connection.close()
     return redirect(url_for('index'))
 
 
 @app.route('/delete/<string:id>') 
 def delete_student(id):
     # RAW Query
-    db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+    # db.session.execute(text(f"DELETE FROM student WHERE id={id}"))
+
+    db.session.execute(
+        text("DELETE FROM student WHERE id = :id"),
+        {"id": id}
+    )
     db.session.commit()
     return redirect(url_for('index'))
 
@@ -62,12 +68,17 @@ def edit_student(id):
         grade = request.form['grade']
         
         # RAW Query
-        db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+        # db.session.execute(text(f"UPDATE student SET name='{name}', age={age}, grade='{grade}' WHERE id={id}"))
+
+        db.session.execute(
+            text(""" UPDATE student SET name  = :name,age   = :age,grade = :grade WHERE id = :id """),
+            {"name": name, "age": age, "grade": grade, "id": id}
+        )
         db.session.commit()
         return redirect(url_for('index'))
     else:
         # RAW Query
-        student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
+        student = db.session.execute(text("SELECT * FROM student WHERE id= :id"),{"id": id}).fetchone()
         return render_template('edit.html', student=student)
 
 # if __name__ == '__main__':
