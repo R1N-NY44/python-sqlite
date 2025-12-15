@@ -1,13 +1,23 @@
 import re
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import sqlite3
 
 app = Flask(__name__)
+
+# secret key for session management (yoga)
+app.secret_key = "1f9b77d6c1d046d4b6d8ef6f51bb95ce4f2a1c6630c07fe829ddda6dae873c37"
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///students.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# Database Models for User
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,11 +28,44 @@ class Student(db.Model):
     def __repr__(self):
         return f'<Student {self.name}>'
 
+    
+# @app.before_request
+# def require_login():
+#     allowed_routes = ['login']
+#     if request.endpoint not in allowed_routes and 'user_id' not in session:
+#         return redirect(url_for('login'))
+
 @app.route('/')
 def index():
     # RAW Query
     students = db.session.execute(text('SELECT * FROM student')).fetchall()
     return render_template('index.html', students=students)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        user = db.session.execute(
+            text("SELECT * FROM user WHERE username = :username AND password = :password"),
+            {"username": username, "password": password}
+        ).fetchone()
+
+        if user:
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error="Username atau password salah")
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
 
 @app.route('/add', methods=['POST'])
 def add_student():
