@@ -29,7 +29,24 @@ class Student(db.Model):
         return f'<Student {self.name}>'
 
     
-# @app.before_request
+@app.before_request
+def require_login():
+    # endpoint bisa None kalau route tidak ditemukan
+    if request.endpoint is None:
+        if 'user_id' in session:
+            return redirect(url_for('index'))
+        return redirect(url_for('login'))
+
+    # izinkan static file
+    if request.endpoint == 'static':
+        return
+
+    # route yang boleh tanpa login
+    allowed_routes = ['login']
+
+    if request.endpoint not in allowed_routes and 'user_id' not in session:
+        return redirect(url_for('login'))
+
 # def require_login():
 #     allowed_routes = ['login']
 #     if request.endpoint not in allowed_routes and 'user_id' not in session:
