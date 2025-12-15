@@ -46,9 +46,9 @@ def add_student():
 
     if grade.strip() == "":
         return render_template('index.html', students=students, error="Grade tidak boleh kosong")
-    if len(grade) > 2:
+    if len(grade) > 10:
             return render_template('index.html', students=students, error="Grade terlalu panjang")
-    if not re.match("^[A-Za-z ]+$", grade):
+    if not re.match("^[A-Za-z0-9 ]+$", grade):
         return render_template('index.html', students=students, error="Grade tidak valid")
 
     connection = sqlite3.connect('instance/students.db')
@@ -91,9 +91,7 @@ def edit_student(id):
         age = request.form['age']
         grade = request.form['grade']
         
-        student = db.session.execute(
-            text(f"SELECT * FROM student WHERE id={id}")
-        ).fetchone()
+        student = db.session.execute(text(f"SELECT * FROM student WHERE id={id}")).fetchone()
 
         if name.strip() == "":
             return render_template('edit.html', student=student, error="Nama tidak boleh kosong")
@@ -109,9 +107,9 @@ def edit_student(id):
 
         if grade.strip() == "":
             return render_template('edit.html', student=student, error="Grade tidak boleh kosong")
-        if len(grade) > 2:
+        if len(grade) > 10:
             return render_template('edit.html', student=student, error="Grade terlalu panjang")
-        if not re.match("^[A-Za-z ]+$", grade):
+        if not re.match("^[A-Za-z0-9 ]+$", grade):
             return render_template('edit.html', student=student, error="Grade tidak valid")
         
         # RAW Query
